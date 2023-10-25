@@ -23,7 +23,7 @@ func ConnectDatabase() {
 		panic("Cannot connect to database")
 	}
 
-	err = autoMigrateStructs(database, &Story{}, &User{})
+	err = autoMigrateStructs(database, &Story{}, &User{}, &UserPreferences{})
 	if err != nil {
 		return
 	}

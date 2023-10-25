@@ -1,6 +1,8 @@
 package models
 
 import (
+	"database/sql/driver"
+	"fmt"
 	"html"
 	"strings"
 
@@ -11,8 +13,9 @@ import (
 
 type User struct {
 	gorm.Model
-	Username string `gorm:"unique;not null;size:255" json:"username"`
-	Password string `gorm:"not null;size:255" json:"password"`
+	Username        string          `gorm:"unique;not null;size:255" json:"username"`
+	Password        string          `gorm:"not null;size:255" json:"password"`
+	UserPreferences UserPreferences `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
 }
 
 func verifyPassword(hashedPassword, password string) error {
@@ -63,4 +66,27 @@ func (u *User) BeforeSave(tx *gorm.DB) error {
 	u.Username = html.EscapeString(strings.TrimSpace(u.Username))
 
 	return nil
+}
+
+type SourceSelection []string
+
+func (s *SourceSelection) Scan(src any) error {
+	bytes, ok := src.(string)
+	if !ok {
+		return fmt.Errorf("expected string, got %T", src)
+	}
+	*s = SourceSelection(strings.Split(string(bytes), ","))
+	return nil
+}
+func (s SourceSelection) Value() (driver.Value, error) {
+	if len(s) == 0 {
+		return nil, nil
+	}
+	return strings.Join(s, ","), nil
+}
+
+type UserPreferences struct {
+	gorm.Model
+	UserID          uint            `json:"user_id"`
+	SourceSelection SourceSelection `json:"user_sources" gorm:"type:text"`
 }

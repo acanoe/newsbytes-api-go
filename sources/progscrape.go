@@ -11,6 +11,10 @@ import (
 
 type Progscrape struct{}
 
+func (p Progscrape) GetName() string {
+	return "progscrape"
+}
+
 // Filter stories by date
 func filterStoriesByDate(stories []models.Story, date time.Time) []models.Story {
 	filteredStories := []models.Story{}
@@ -35,6 +39,11 @@ func (p Progscrape) GetNews() ([]models.Story, error) {
 	err = json.NewDecoder(res.Body).Decode(&newsData)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse JSON response: %w", err)
+	}
+
+	// Set news source to progscrape
+	for i := range newsData.Stories {
+		newsData.Stories[i].Source = p.GetName()
 	}
 
 	today := time.Now().UTC().Truncate(24 * time.Hour)
