@@ -76,6 +76,9 @@ func main() {
 	s := gocron.NewScheduler(time.Local)
 	s.EveryRandom(5, 10).Hours().Do(updateNews)
 
+	// Define groups
+	auth := r.Group("/auth")
+
 	// Define routes
 	r.GET("/", controllers.GetStories)
 	r.GET("/ping", func(c *gin.Context) {
@@ -83,6 +86,8 @@ func main() {
 			"message": "pong",
 		})
 	})
+
+	auth.POST("/register", controllers.Register)
 
 	// Start the server and scheduler
 	r.Run()
