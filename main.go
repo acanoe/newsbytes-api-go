@@ -15,11 +15,10 @@ func setupRouter() *gin.Engine {
 
 	// Define groups
 	auth := r.Group("/auth")
+	sources := r.Group("/sources")
 
 	// Define routes
 	r.GET("/", middlewares.JwtAuthMiddleware(), controllers.GetStories)
-	r.GET("/sources", controllers.GetAvailableSources)
-	r.POST("/sources", middlewares.JwtAuthMiddleware(), controllers.SetUserSources)
 	r.GET("/ping", func(c *gin.Context) {
 		c.JSON(200, gin.H{
 			"message": "pong",
@@ -28,6 +27,10 @@ func setupRouter() *gin.Engine {
 
 	auth.POST("/register", controllers.Register)
 	auth.POST("/login", controllers.Login)
+
+	sources.GET("/", controllers.GetAvailableSources)
+	sources.POST("/", middlewares.JwtAuthMiddleware(), controllers.SetUserSources)
+	sources.GET("/:source", controllers.GetStoriesBySource)
 
 	return r
 }

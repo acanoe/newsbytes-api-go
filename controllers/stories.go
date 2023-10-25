@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"net/http"
-	"strings"
 
 	"github.com/acanoe/newsbytes-api-go/models"
 	"github.com/acanoe/newsbytes-api-go/utils"
@@ -33,20 +32,48 @@ func GetStories(c *gin.Context) {
 	}
 
 	// Get stories from the selected sources
-	models.DB.Where("source IN (?)", selectedSources).Order("date desc").Find(&stories)
+	models.DB.
+		Where("source IN (?)", selectedSources).
+		Order("date desc").
+		Find(&stories)
 
-	// Get all the tags from the stories
-	var rawTags []string
-	models.DB.Model(&stories).Pluck("tags", &rawTags)
-
-	for _, tag := range rawTags {
-		tags = append(tags, strings.Split(tag, ",")...)
+	// Extract tags from stories
+	for _, story := range stories {
+		tags = append(tags, story.Tags...)
 	}
 
-	tags = utils.RemoveDuplicateStr(tags)
+	c.JSON(http.StatusOK, gin.H{
+		"tags":    utils.RemoveDuplicateStr(tags),
+		"stories": stories,
+	})
+}
+
+func GetStoriesBySource(c *gin.Context) {
+	source := c.Param("source")
+
+	var stories []models.Story
+	var tags []string
+
+	models.DB.
+		Where("source = ?", source).
+		Order("date desc").
+		Find(&stories)
+
+	// if no stories are found, return 404
+	if len(stories) == 0 {
+		c.JSON(http.StatusNotFound, gin.H{
+			"message": "No stories found",
+		})
+		return
+	}
+
+	// Extract tags from stories
+	for _, story := range stories {
+		tags = append(tags, story.Tags...)
+	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"tags":    tags,
+		"tags":    utils.RemoveDuplicateStr(tags),
 		"stories": stories,
 	})
 }
