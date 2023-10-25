@@ -7,11 +7,32 @@ import (
 	"time"
 
 	"github.com/acanoe/newsbytes-api-go/controllers"
+	"github.com/acanoe/newsbytes-api-go/middlewares"
 	"github.com/acanoe/newsbytes-api-go/models"
 	"github.com/gin-gonic/gin"
 	"github.com/go-co-op/gocron"
 	"gorm.io/gorm/clause"
 )
+
+func setupRouter() *gin.Engine {
+	r := gin.Default()
+
+	// Define groups
+	auth := r.Group("/auth")
+
+	// Define routes
+	r.GET("/", middlewares.JwtAuthMiddleware(), controllers.GetStories)
+	r.GET("/ping", func(c *gin.Context) {
+		c.JSON(200, gin.H{
+			"message": "pong",
+		})
+	})
+
+	auth.POST("/register", controllers.Register)
+	auth.POST("/login", controllers.Login)
+
+	return r
+}
 
 func loadSource(path string) (models.NewsSource, error) {
 	// load plugin
@@ -64,31 +85,18 @@ func updateNews() {
 }
 
 func main() {
-	r := gin.Default()
+	// Set up the router
+	r := setupRouter()
 
 	// Connect to the database
 	models.ConnectDatabase()
 
 	// Update news manually
-	updateNews()
+	// updateNews()
 
 	// Set schedule for updating stories
 	s := gocron.NewScheduler(time.Local)
 	s.EveryRandom(5, 10).Hours().Do(updateNews)
-
-	// Define groups
-	auth := r.Group("/auth")
-
-	// Define routes
-	r.GET("/", controllers.GetStories)
-	r.GET("/ping", func(c *gin.Context) {
-		c.JSON(200, gin.H{
-			"message": "pong",
-		})
-	})
-
-	auth.POST("/register", controllers.Register)
-	auth.POST("/login", controllers.Login)
 
 	// Start the server and scheduler
 	r.Run()
