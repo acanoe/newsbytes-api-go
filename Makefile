@@ -8,4 +8,4 @@ build-sources:
 run:
 	@go run main.go
 
-run-local: clean build-sources run
+run-local: build-sources run

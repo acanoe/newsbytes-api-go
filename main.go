@@ -88,6 +88,7 @@ func main() {
 	})
 
 	auth.POST("/register", controllers.Register)
+	auth.POST("/login", controllers.Login)
 
 	// Start the server and scheduler
 	r.Run()

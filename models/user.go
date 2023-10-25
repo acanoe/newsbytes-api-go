@@ -23,7 +23,7 @@ func CheckLogin(username, password string) (string, error) {
 	var err error
 	var user User
 
-	result := DB.Model(&User{}).Find("username = ?", username).Take(&user)
+	result := DB.Model(&User{}).Where("username = ?", username).Take(&user)
 	if result.Error != nil {
 		return "", err
 	}

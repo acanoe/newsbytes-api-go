@@ -12,6 +12,11 @@ type RegisterInput struct {
 	Password string `json:"password" binding:"required"`
 }
 
+type LoginInput struct {
+	Username string `json:"username" binding:"required"`
+	Password string `json:"password" binding:"required"`
+}
+
 func Register(c *gin.Context) {
 	var input RegisterInput
 
@@ -47,5 +52,33 @@ func Register(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{
 		"message": "user registered",
+	})
+}
+
+func Login(c *gin.Context) {
+	var input LoginInput
+
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	user := models.User{
+		Username: input.Username,
+		Password: input.Password,
+	}
+
+	token, err := models.CheckLogin(user.Username, user.Password)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"token": token,
 	})
 }
