@@ -36,11 +36,11 @@ func setupRouter() *gin.Engine {
 }
 
 func main() {
-	// Set up the router
-	r := setupRouter()
-
 	// Connect to the database
 	models.ConnectDatabase()
+
+	// Set up the router
+	r := setupRouter()
 
 	// News sources
 	sources := []string{

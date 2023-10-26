@@ -7,13 +7,17 @@ import (
 	"strings"
 	"time"
 
+	"github.com/acanoe/newsbytes-api-go/utils"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 )
 
 func GenerateToken(userId uint) (string, error) {
-	tokenLifespan := 30   // token lifespan in minutes
-	apiSecret := "secret" // API secret
+	apiSecret := utils.GetEnv("API_SECRET", "secret")                        // API secret
+	tokenLifespan, err := strconv.Atoi(utils.GetEnv("TOKEN_LIFESPAN", "30")) // token lifespan in minutes
+	if err != nil {
+		return "", err
+	}
 
 	expirationTime := time.Now().Add(time.Minute * time.Duration(tokenLifespan)).Unix()
 
@@ -46,7 +50,7 @@ func ExtractToken(c *gin.Context) string {
 }
 
 func ParseToken(tokenString string) (*jwt.Token, error) {
-	apiSecret := "secret"
+	apiSecret := utils.GetEnv("API_SECRET", "secret")
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])

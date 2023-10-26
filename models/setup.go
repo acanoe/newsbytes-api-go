@@ -1,7 +1,12 @@
 package models
 
 import (
-	"gorm.io/driver/sqlite"
+	"fmt"
+	"log"
+
+	"github.com/acanoe/newsbytes-api-go/utils"
+	"github.com/joho/godotenv"
+	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
@@ -17,10 +22,23 @@ func autoMigrateStructs(db *gorm.DB, structs ...interface{}) error {
 }
 
 func ConnectDatabase() {
-	database, err := gorm.Open(sqlite.Open("db.sqlite"), &gorm.Config{})
-
+	err := godotenv.Load(".env")
 	if err != nil {
-		panic("Cannot connect to database")
+		log.Fatal("Cannot load .env file")
+	}
+
+	dbHost := utils.GetEnv("DB_HOST", "localhost")
+	dbPort := utils.GetEnv("DB_PORT", "5432")
+	dbName := utils.GetEnv("DB_NAME", "mydatabase")
+	dbUser := utils.GetEnv("DB_USER", "myuser")
+	dbPass := utils.GetEnv("DB_PASS", "mypassword")
+	sslMode := utils.GetEnv("SSL_MODE", "disable")
+	timeZone := utils.GetEnv("TIMEZONE", "Asia/Jakarta")
+
+	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=%s TimeZone=%s", dbHost, dbUser, dbPass, dbName, dbPort, sslMode, timeZone)
+	database, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	if err != nil {
+		log.Fatal("Cannot connect to database")
 	}
 
 	err = autoMigrateStructs(database, &Story{}, &User{}, &UserPreferences{})
